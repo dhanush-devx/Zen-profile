@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+
+# Rust
+src-tauri/target/
+
+# macOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
