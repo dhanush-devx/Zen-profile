@@ -10,9 +10,6 @@ A beautiful native profile manager for Zen Browser.
 - ⚡ Native performance with Rust + Tauri
 - 🎨 Modern UI built with React
 
-## Screenshots
-
-(Add screenshots here)
 
 ## Tech Stack
 
