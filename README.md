@@ -1,7 +1,30 @@
-# Tauri + React + Typescript
+# Zen Profile
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A beautiful native profile manager for Zen Browser.
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- 🚀 Launch any Zen Browser profile
+- 👤 Custom avatars
+- 💾 Persistent profile settings
+- ⚡ Native performance with Rust + Tauri
+- 🎨 Modern UI built with React
+
+## Screenshots
+
+(Add screenshots here)
+
+## Tech Stack
+
+- Tauri v2
+- Rust
+- React
+- TypeScript
+- Tailwind CSS
+
+## Installation
+
+```bash
+npm install
+npm run tauri dev
+```
