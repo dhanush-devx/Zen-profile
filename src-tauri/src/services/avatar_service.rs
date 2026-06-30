@@ -1,13 +1,36 @@
 use base64::Engine as _;
 use dirs::home_dir;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tauri_plugin_dialog::{DialogExt, FilePath};
 
-/// profile_id → avatar filename (e.g. "oa1jx08s.StellarProof.png")
-type AvatarMap = HashMap<String, String>;
+// ── Settings types ────────────────────────────────────────────────────────────
 
-// ── Paths ────────────────────────────────────────────────────────────────────
+/// Per-profile settings stored in settings.json.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ProfileSettings {
+    /// Custom display name chosen by the user (overrides the Zen Browser name).
+    pub display_name: Option<String>,
+    /// Avatar filename inside the avatars/ directory.
+    pub avatar: Option<String>,
+
+    /// Preserve any other unknown/custom properties.
+    #[serde(flatten, default)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+/// Global settings file structure containing "profiles" and preserving root-level extra fields.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct AppSettings {
+    pub profiles: HashMap<String, ProfileSettings>,
+
+    /// Preserve any other root-level unknown/custom properties.
+    #[serde(flatten, default)]
+    pub extra: HashMap<String, serde_json::Value>,
+}
+
+// ── Paths ─────────────────────────────────────────────────────────────────────
 
 fn zen_profile_dir() -> PathBuf {
     home_dir()
@@ -27,31 +50,74 @@ fn settings_path() -> PathBuf {
 
 // ── Settings persistence ──────────────────────────────────────────────────────
 
-fn read_settings() -> AvatarMap {
-    let path = settings_path();
-    if !path.exists() {
-        return HashMap::new();
+fn parse_settings(content: &str) -> AppSettings {
+    let trimmed = content.trim();
+    if trimmed.is_empty() || trimmed == "{}" {
+        return AppSettings::default();
     }
-    std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
+
+    // 1. Try parsing Format B (current/new format with "profiles" key)
+    if let Ok(settings) = serde_json::from_str::<AppSettings>(content) {
+        if !settings.profiles.is_empty() || content.contains("\"profiles\"") {
+            return settings;
+        }
+    }
+
+    // 2. Try parsing Format C (Flat map of String -> ProfileSettings)
+    if let Ok(flat_settings) = serde_json::from_str::<HashMap<String, ProfileSettings>>(content) {
+        return AppSettings {
+            profiles: flat_settings,
+            extra: HashMap::new(),
+        };
+    }
+
+    // 3. Try parsing Format A (Flat map of String -> String)
+    if let Ok(old_flat) = serde_json::from_str::<HashMap<String, String>>(content) {
+        let profiles = old_flat
+            .into_iter()
+            .map(|(k, v)| {
+                (
+                    k,
+                    ProfileSettings {
+                        avatar: Some(v),
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect();
+        return AppSettings {
+            profiles,
+            extra: HashMap::new(),
+        };
+    }
+
+    AppSettings::default()
 }
 
-fn write_settings(map: &AvatarMap) -> Result<(), String> {
+fn read_settings() -> AppSettings {
+    let path = settings_path();
+    if !path.exists() {
+        return AppSettings::default();
+    }
+
+    let content = std::fs::read_to_string(&path).unwrap_or_default();
+    parse_settings(&content)
+}
+
+fn write_settings(settings: &AppSettings) -> Result<(), String> {
     let path = settings_path();
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    let json = serde_json::to_string_pretty(map).map_err(|e| e.to_string())?;
+    let json = serde_json::to_string_pretty(settings).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| e.to_string())
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/// Returns all profile_id → filename mappings from settings.json.
-/// Called by profile_service to attach avatars to profiles on startup.
-pub fn all_avatar_mappings() -> AvatarMap {
+/// Returns all per-profile settings.
+/// Called by profile_service on startup to populate name and avatar.
+pub fn all_settings() -> AppSettings {
     read_settings()
 }
 
@@ -62,28 +128,24 @@ pub fn all_avatar_mappings() -> AvatarMap {
 /// Returns Ok(Some(filename)) on success, e.g. "oa1jx08s.StellarProof.png".
 ///
 /// Uses pick_file(callback) rather than blocking_pick_file() because
-/// blocking_pick_file() dispatches NSOpenPanel.runModal() to the main thread
-/// via dispatch_sync, which deadlocks against WRY/tao's event loop ownership
-/// on macOS — the Open button never enables. The async callback version
-/// integrates correctly with the running AppKit event loop.
+/// blocking_pick_file() dispatches NSOpenPanel.runModal() via dispatch_sync,
+/// which conflicts with WRY/tao's main-thread event loop on macOS.
 pub async fn select_avatar(
     app: &tauri::AppHandle,
     profile_id: &str,
 ) -> Result<Option<String>, String> {
     let (tx, rx) = tokio::sync::oneshot::channel::<Option<FilePath>>();
 
-    app.dialog()
-        .file()
-        .pick_file(move |path| {
-            // Called on the main thread after the user dismisses the dialog.
-            let _ = tx.send(path);
-        });
+    app.dialog().file().pick_file(move |path| {
+        let _ = tx.send(path);
+    });
 
-    // Await the callback result — yields back to Tokio while the dialog is open.
-    let picked = rx.await.map_err(|_| "Dialog was dropped unexpectedly".to_string())?;
+    let picked = rx
+        .await
+        .map_err(|_| "Dialog was dropped unexpectedly".to_string())?;
 
     let Some(file_path) = picked else {
-        return Ok(None); // user cancelled
+        return Ok(None);
     };
 
     let source: PathBuf = match file_path {
@@ -91,7 +153,6 @@ pub async fn select_avatar(
         _ => return Err("Unsupported file path type".into()),
     };
 
-    // Derive and validate extension.
     let ext = source
         .extension()
         .and_then(|e| e.to_str())
@@ -106,7 +167,6 @@ pub async fn select_avatar(
         ));
     }
 
-    // Extract just the folder name from the profile_id.
     // "Profiles/oa1jx08s.StellarProof" → "oa1jx08s.StellarProof"
     let folder_name = std::path::Path::new(profile_id)
         .file_name()
@@ -115,28 +175,40 @@ pub async fn select_avatar(
 
     let filename = format!("{}.{}", folder_name, ext);
 
-    // Copy image to avatars directory.
     let dest_dir = avatars_dir();
     std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
     std::fs::copy(&source, dest_dir.join(&filename)).map_err(|e| e.to_string())?;
 
-    // Persist: profile_id → filename.
     let mut settings = read_settings();
-    settings.insert(profile_id.to_string(), filename.clone());
+    settings
+        .profiles
+        .entry(profile_id.to_string())
+        .or_default()
+        .avatar = Some(filename.clone());
     write_settings(&settings)?;
 
     Ok(Some(filename))
 }
 
-/// Reads an avatar file from the avatars directory and returns it as a
-/// base64 data URL (e.g. "data:image/png;base64,...").
-///
-/// React uses this directly as <img src>. No filesystem path is exposed.
+/// Saves a custom display name for a profile in settings.json.
+/// Pass an empty string to clear the custom name (falls back to Zen's name).
+pub fn rename_profile(profile_id: &str, display_name: &str) -> Result<(), String> {
+    let mut settings = read_settings();
+    let entry = settings.profiles.entry(profile_id.to_string()).or_default();
+    let trimmed = display_name.trim();
+    entry.display_name = if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    };
+    write_settings(&settings)
+}
+
+/// Reads an avatar file and returns it as a base64 data URL ready for <img src>.
 pub fn load_avatar(filename: &str) -> Result<String, String> {
     let path = avatars_dir().join(filename);
-    let bytes = std::fs::read(&path).map_err(|e| {
-        format!("Failed to read avatar \"{}\": {}", filename, e)
-    })?;
+    let bytes = std::fs::read(&path)
+        .map_err(|e| format!("Failed to read avatar \"{}\": {}", filename, e))?;
 
     let ext = path
         .extension()
@@ -152,4 +224,86 @@ pub fn load_avatar(filename: &str) -> Result<String, String> {
 
     let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
     Ok(format!("data:{};base64,{}", mime, b64))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_migrate_format_a() {
+        let json = r#"{
+            "Profiles/default": "avatar.png",
+            "Profiles/work": "work_avatar.jpg"
+        }"#;
+        let settings = parse_settings(json);
+
+        assert_eq!(settings.profiles.len(), 2);
+        assert_eq!(
+            settings.profiles.get("Profiles/default").unwrap().avatar,
+            Some("avatar.png".to_string())
+        );
+        assert_eq!(
+            settings.profiles.get("Profiles/work").unwrap().avatar,
+            Some("work_avatar.jpg".to_string())
+        );
+    }
+
+    #[test]
+    fn test_migrate_format_c() {
+        let json = r#"{
+            "Profiles/work": {
+                "display_name": "Work Profile",
+                "avatar": "work.png"
+            }
+        }"#;
+
+        let settings = parse_settings(json);
+
+        assert_eq!(settings.profiles.len(), 1);
+        let profile = settings.profiles.get("Profiles/work").unwrap();
+        assert_eq!(profile.display_name, Some("Work Profile".to_string()));
+        assert_eq!(profile.avatar, Some("work.png".to_string()));
+    }
+
+    #[test]
+    fn test_format_b_with_extra_fields() {
+        let json = r#"{
+            "profiles": {
+                "Profiles/work": {
+                    "display_name": "Work",
+                    "avatar": "work.png",
+                    "favorite": true,
+                    "launch_count": 42,
+                    "custom_future_field": "hello-world"
+                }
+            },
+            "root_level_extra_field": 12345
+        }"#;
+
+        let settings = parse_settings(json);
+        assert_eq!(settings.profiles.len(), 1);
+        let profile = settings.profiles.get("Profiles/work").unwrap();
+        assert_eq!(profile.display_name, Some("Work".to_string()));
+
+        // Unused fields should be preserved inside ProfileSettings' extra field:
+        assert_eq!(
+            profile.extra.get("favorite").unwrap(),
+            &serde_json::Value::Bool(true)
+        );
+        assert_eq!(
+            profile.extra.get("launch_count").unwrap(),
+            &serde_json::Value::Number(serde_json::Number::from(42))
+        );
+        assert_eq!(
+            profile.extra.get("custom_future_field").unwrap(),
+            &serde_json::Value::String("hello-world".to_string())
+        );
+
+        // Unknown fields should be preserved at the root level:
+        assert_eq!(
+            settings.extra.get("root_level_extra_field").unwrap(),
+            &serde_json::Value::Number(serde_json::Number::from(12345))
+        );
+    }
 }

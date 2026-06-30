@@ -71,6 +71,24 @@ export default function ProfileGrid() {
     }
   }
 
+  async function handleRename(profile: Profile, newName: string) {
+    try {
+      await invoke("rename_profile", {
+        profileId: profile.id,
+        displayName: newName,
+      });
+
+      // Update state locally
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, name: newName } : p
+        )
+      );
+    } catch (error) {
+      console.error("Failed to rename profile:", error);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-24 text-zinc-400">
@@ -95,6 +113,7 @@ export default function ProfileGrid() {
           profile={profile}
           onClick={handleProfileClick}
           onAvatarClick={handleAvatarClick}
+          onRename={handleRename}
         />
       ))}
     </section>

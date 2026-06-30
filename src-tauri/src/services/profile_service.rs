@@ -30,20 +30,11 @@ pub fn get_profiles() -> Vec<Profile> {
             continue;
         }
 
-        let name = properties
-            .get("Name")
-            .unwrap_or("Unknown")
-            .to_string();
+        let name = properties.get("Name").unwrap_or("Unknown").to_string();
 
-        let path = properties
-            .get("Path")
-            .unwrap_or("")
-            .to_string();
+        let path = properties.get("Path").unwrap_or("").to_string();
 
-        let is_default = properties
-            .get("Default")
-            .map(|v| v == "1")
-            .unwrap_or(false);
+        let is_default = properties.get("Default").map(|v| v == "1").unwrap_or(false);
 
         profiles.push(Profile {
             id: path.clone(),
@@ -54,13 +45,18 @@ pub fn get_profiles() -> Vec<Profile> {
         });
     }
 
-    // Attach saved avatar filenames from settings.json.
-    // Each profile.avatar will hold a filename (e.g. "oa1jx08s.StellarProof.png")
-    // that the frontend converts to a data URL via the load_avatar command.
-    let avatar_map = avatar_service::all_avatar_mappings();
+    // Attach custom names and avatar filenames from settings.json.
+    // display_name overrides the Zen Browser profile name when set.
+    // avatar holds a filename the frontend converts to a data URL via load_avatar.
+    let settings = avatar_service::all_settings();
     for profile in &mut profiles {
-        if let Some(filename) = avatar_map.get(&profile.id) {
-            profile.avatar = Some(filename.clone());
+        if let Some(setting) = settings.profiles.get(&profile.id) {
+            if let Some(name) = &setting.display_name {
+                profile.name = name.clone();
+            }
+            if let Some(avatar) = &setting.avatar {
+                profile.avatar = Some(avatar.clone());
+            }
         }
     }
 
@@ -71,13 +67,7 @@ pub fn launch_profile(profile_id: String) {
     println!("Launching profile: {}", profile_id);
 
     let status = Command::new("open")
-        .args([
-            "-na",
-            "/Applications/Zen.app",
-            "--args",
-            "-P",
-            &profile_id,
-        ])
+        .args(["-na", "/Applications/Zen.app", "--args", "-P", &profile_id])
         .status();
 
     println!("{:?}", status);

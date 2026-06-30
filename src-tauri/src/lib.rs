@@ -12,6 +12,7 @@ pub fn run() {
             commands::profile_commands::launch_profile,
             commands::avatar_commands::select_avatar,
             commands::avatar_commands::load_avatar,
+            commands::avatar_commands::rename_profile,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

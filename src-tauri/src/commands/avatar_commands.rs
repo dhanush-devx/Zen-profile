@@ -22,3 +22,11 @@ pub async fn select_avatar(
 pub fn load_avatar(filename: String) -> Result<String, String> {
     avatar_service::load_avatar(&filename)
 }
+
+/// Saves a custom display name for a profile.
+/// The name is stored in settings.json under the profile's id.
+/// Pass an empty string to clear the custom name (falls back to Zen's name).
+#[tauri::command]
+pub fn rename_profile(profile_id: String, display_name: String) -> Result<(), String> {
+    avatar_service::rename_profile(&profile_id, &display_name)
+}
