@@ -30,3 +30,9 @@ pub fn load_avatar(filename: String) -> Result<String, String> {
 pub fn rename_profile(profile_id: String, display_name: String) -> Result<(), String> {
     avatar_service::rename_profile(&profile_id, &display_name)
 }
+
+/// Removes the custom avatar for a profile.
+#[tauri::command]
+pub fn remove_avatar(profile_id: String) -> Result<(), String> {
+    avatar_service::remove_avatar(&profile_id)
+}

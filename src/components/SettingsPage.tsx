@@ -71,27 +71,28 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
     ];
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="mx-auto max-w-2xl px-6 py-10 animate-in fade-in duration-200 ease-out">
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="mb-10 flex items-center gap-3">
+      <div className="mb-8 relative flex items-center justify-center min-h-[38px]">
         <Link
           to="/"
           className="
+            absolute left-0
             flex items-center gap-1.5
-            rounded-lg px-3 py-2
-            text-sm text-muted-foreground
-            transition-colors hover:bg-accent hover:text-accent-foreground
+            rounded-xl px-3 py-1.5
+            text-sm font-medium text-muted-foreground
+            transition-colors duration-150 hover:bg-accent hover:text-accent-foreground
           "
         >
-          <ArrowLeft size={15} />
+          <ArrowLeft size={14} />
           Back
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">Settings</h1>
       </div>
 
       {/* ── Sections ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
 
         {/* ── Appearance ───────────────────────────────────────────────── */}
         <Section title="Appearance">
@@ -100,7 +101,7 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
             description="Choose the application color scheme."
           >
             {/* Segmented control */}
-            <div className="flex rounded-xl border border-border bg-muted/50 p-1 gap-0.5">
+            <div className="flex rounded-2xl border border-border/80 bg-muted/65 p-0.5 gap-0.5">
               {themeOptions.map(({ value, label, icon }) => (
                 <button
                   key={value}
@@ -108,13 +109,13 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
                   onClick={() => onThemeChange(value)}
                   className={`
                     flex items-center gap-1.5
-                    rounded-lg px-3 py-1.5
+                    rounded-xl px-3.5 py-1.5
                     text-sm font-medium
                     transition-all duration-150
                     ${
                       theme === value
-                        ? "bg-violet-600 text-white shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
                     }
                   `}
                 >
@@ -139,7 +140,7 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
             />
           </Row>
           {launchError && (
-            <p className="px-4 pb-3 text-xs text-destructive" role="alert">
+            <p className="px-5 pb-3 text-xs text-destructive font-medium" role="alert">
               {launchError}
             </p>
           )}
@@ -150,39 +151,17 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
           {versionInfo ? (
             <>
               {/* App identity */}
-              <div className="px-4 pt-3 pb-4">
+              <div className="px-5 pt-4 pb-4">
                 <p className="text-[15px] font-semibold text-foreground">
                   {versionInfo.app_name}
                 </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-sm text-muted-foreground font-normal">
                   Version {versionInfo.app_version}
                 </p>
-                {/* Stack badges */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {[
-                    `Tauri ${versionInfo.tauri_version}`,
-                    `React ${React.version}`,
-                    versionInfo.platform === "macos"
-                      ? "macOS"
-                      : versionInfo.platform,
-                  ].map((badge) => (
-                    <span
-                      key={badge}
-                      className="
-                        rounded-md border border-border
-                        bg-muted/60
-                        px-2 py-0.5
-                        text-xs text-muted-foreground
-                      "
-                    >
-                      {badge}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center gap-2 border-t border-border/60 px-4 py-3">
+              <div className="flex items-center gap-2 border-t border-border/40 px-5 py-3.5">
                 <OutlineButton
                   id="btn-github"
                   icon={<Github size={13} />}
@@ -204,7 +183,7 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
               </div>
             </>
           ) : (
-            <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>
+            <div className="px-5 py-4 text-sm text-muted-foreground">Loading…</div>
           )}
         </Section>
 
@@ -219,10 +198,11 @@ export default function SettingsPage({ theme, onThemeChange }: Props) {
               onClick={handleOpenFolder}
               className="
                 flex items-center gap-1.5
-                rounded-lg border border-border
-                px-3 py-1.5
-                text-sm text-foreground
-                transition-colors
+                rounded-xl border border-border
+                bg-card
+                px-3.5 py-1.5
+                text-sm font-medium text-foreground
+                transition-all duration-150
                 hover:bg-accent hover:text-accent-foreground
               "
             >
@@ -248,9 +228,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="border-b border-border/60 px-4 py-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/80">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_-3px_rgba(0,0,0,0.06)] dark:shadow-none">
+      <div className="border-b border-border/40 px-5 py-2.5 bg-muted/20">
+        <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
           {title}
         </h2>
       </div>
@@ -273,11 +253,11 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-6 px-4 py-4">
+    <div className="flex items-center justify-between gap-6 px-5 py-4">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-[14px] font-medium text-foreground">{label}</p>
         {description && (
-          <p className="mt-0.5 break-all text-xs text-muted-foreground">{description}</p>
+          <p className="mt-0.5 break-all text-xs text-muted-foreground/80 leading-normal">{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -303,16 +283,17 @@ function Toggle({
       onClick={onChange}
       className={`
         relative h-[26px] w-[46px] rounded-full
-        transition-colors duration-200
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50
-        ${checked ? "bg-violet-600" : "bg-muted"}
+        border border-zinc-300 dark:border-zinc-700
+        transition-colors duration-150
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30
+        ${checked ? "bg-primary border-transparent" : "bg-zinc-200 dark:bg-zinc-800"}
       `}
     >
       <span
         className={`
-          absolute top-[3px] left-[3px]
-          h-5 w-5 rounded-full bg-white shadow-sm
-          transition-transform duration-200
+          absolute top-[2px] left-[2px]
+          h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]
+          transition-transform duration-150
           ${checked ? "translate-x-[20px]" : "translate-x-0"}
         `}
       />
@@ -338,10 +319,10 @@ function OutlineButton({
       onClick={onClick}
       className="
         flex items-center gap-1.5
-        rounded-lg border border-border
-        px-3 py-1.5
-        text-sm text-foreground
-        transition-colors
+        rounded-xl border border-border
+        px-3.5 py-1.5
+        text-sm font-medium text-foreground
+        transition-all duration-150
         hover:bg-accent hover:text-accent-foreground
       "
     >

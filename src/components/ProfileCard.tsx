@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Camera, Pencil } from "lucide-react";
+import { Camera, Pencil, X } from "lucide-react";
 import { Card } from "./ui/card";
 import type { Profile } from "../types/profile";
 
@@ -7,6 +7,7 @@ type Props = {
   profile: Profile;
   onClick: (profile: Profile) => void;
   onAvatarClick?: (profile: Profile) => void;
+  onAvatarRemove?: (profile: Profile) => void;
   onRename?: (profile: Profile, newName: string) => void;
 };
 
@@ -14,6 +15,7 @@ export default function ProfileCard({
   profile,
   onClick,
   onAvatarClick,
+  onAvatarRemove,
   onRename,
 }: Props) {
   const [avatarHovered, setAvatarHovered] = React.useState(false);
@@ -66,30 +68,42 @@ export default function ProfileCard({
     }
   }
 
+  function handleRemoveAvatar(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (onAvatarRemove) {
+      onAvatarRemove(profile);
+    }
+  }
+
   return (
     <Card
       onClick={() => !editing && onClick(profile)}
       className="
+        w-[160px]
+        h-[160px]
         cursor-pointer
         rounded-3xl
         border
         border-border
-        bg-card/75
-        p-8
-        backdrop-blur
+        bg-card
+        p-5
+        flex flex-col items-center justify-center
         transition-all
-        duration-300
-        hover:-translate-y-1
-        hover:border-violet-500/50
-        hover:shadow-2xl
-        hover:shadow-violet-500/10
+        duration-200
+        ease-out
+        shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]
+        dark:shadow-[0_4px_25px_-6px_rgba(0,0,0,0.4)]
+        hover:-translate-y-0.5
+        hover:border-primary/40
+        hover:shadow-[0_8px_30px_-6px_rgba(247,111,83,0.12)]
+        dark:hover:shadow-[0_8px_35px_-8px_rgba(247,111,83,0.25)]
       "
     >
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center justify-center w-full h-full">
 
         {/* ── Avatar ──────────────────────────────────────────────────────── */}
         <div
-          className="relative mb-6 h-24 w-24"
+          className="relative mb-3 h-16 w-16 shrink-0"
           onMouseEnter={() => setAvatarHovered(true)}
           onMouseLeave={() => setAvatarHovered(false)}
         >
@@ -98,9 +112,9 @@ export default function ProfileCard({
               h-full w-full
               overflow-hidden
               rounded-full
-              bg-gradient-to-br from-violet-500 to-blue-500
+              bg-gradient-to-br from-muted-foreground/30 to-muted
               flex items-center justify-center
-              text-4xl font-bold text-white
+              text-2xl font-semibold text-foreground
             "
           >
             {profile.avatar ? (
@@ -115,21 +129,49 @@ export default function ProfileCard({
           </div>
 
           <div
-            onClick={handleAvatarClick}
             className="
               absolute inset-0
               rounded-full
-              bg-black/60
+              bg-black/45
+              backdrop-blur-[2px]
               flex items-center justify-center
-              transition-opacity duration-200
-              cursor-pointer
+              gap-2
+              transition-opacity duration-150
             "
             style={{
               opacity: avatarHovered ? 1 : 0,
               pointerEvents: avatarHovered ? "auto" : "none",
             }}
           >
-            <Camera className="text-white" size={24} />
+            {/* Camera Button to choose new image */}
+            <button
+              onClick={handleAvatarClick}
+              title="Change avatar"
+              className="
+                flex items-center justify-center
+                h-6 w-6 rounded-full bg-white/20 hover:bg-white/35
+                text-white transition-colors duration-150
+                focus:outline-none
+              "
+            >
+              <Camera size={13} />
+            </button>
+
+            {/* X Button to delete current avatar image (if present) */}
+            {profile.avatar && (
+              <button
+                onClick={handleRemoveAvatar}
+                title="Remove avatar"
+                className="
+                  flex items-center justify-center
+                  h-6 w-6 rounded-full bg-white/20 hover:bg-red-500/80
+                  text-white transition-colors duration-150
+                  focus:outline-none
+                "
+              >
+                <X size={12} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -143,24 +185,24 @@ export default function ProfileCard({
             onBlur={commitRename}
             onClick={(e) => e.stopPropagation()}
             className="
-              w-full max-w-[180px]
+              w-full max-w-[120px]
               bg-muted
-              border border-violet-500/60
-              rounded-lg
-              px-3 py-1
-              text-center text-lg font-semibold text-foreground
+              border border-foreground/30
+              rounded-xl
+              px-2 py-0.5
+              text-center text-xs font-medium text-foreground
               outline-none
-              focus:ring-2 focus:ring-violet-500/40
+              focus:ring-2 focus:ring-foreground/20
               transition-all
             "
           />
         ) : (
           <div
-            className="flex items-center gap-1.5 group/name cursor-default"
+            className="flex items-center gap-1 group/name cursor-default"
             onMouseEnter={() => setNameHovered(true)}
             onMouseLeave={() => setNameHovered(false)}
           >
-            <h2 className="text-xl font-semibold text-center text-foreground">
+            <h2 className="text-[14px] font-medium text-center text-foreground tracking-tight truncate max-w-[120px]">
               {profile.name}
             </h2>
             {/* Pencil icon — only visible on hover, clicking starts edit */}
@@ -169,12 +211,12 @@ export default function ProfileCard({
               title="Rename profile"
               className="
                 transition-opacity duration-150
-                text-muted-foreground hover:text-violet-500
+                text-muted-foreground/60 hover:text-foreground
                 focus:outline-none
               "
               style={{ opacity: nameHovered ? 1 : 0 }}
             >
-              <Pencil size={14} />
+              <Pencil size={11} />
             </button>
           </div>
         )}

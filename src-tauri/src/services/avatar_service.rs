@@ -204,6 +204,15 @@ pub fn rename_profile(profile_id: &str, display_name: &str) -> Result<(), String
     write_settings(&settings)
 }
 
+/// Removes the custom avatar mapping for a profile in settings.json.
+pub fn remove_avatar(profile_id: &str) -> Result<(), String> {
+    let mut settings = read_settings();
+    if let Some(entry) = settings.profiles.get_mut(profile_id) {
+        entry.avatar = None;
+    }
+    write_settings(&settings)
+}
+
 /// Reads an avatar file and returns it as a base64 data URL ready for <img src>.
 pub fn load_avatar(filename: &str) -> Result<String, String> {
     let path = avatars_dir().join(filename);

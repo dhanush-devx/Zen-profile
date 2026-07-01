@@ -4,12 +4,20 @@ import { Plus } from "lucide-react";
 
 import ProfileCard from "./ProfileCard";
 import NewProfileModal from "./NewProfileModal";
+import EmptyState from "./EmptyState";
 import type { Profile } from "../types/profile";
 
-export default function ProfileGrid() {
+interface ProfileGridProps {
+  showNewProfileModal: boolean;
+  setShowNewProfileModal: (show: boolean) => void;
+}
+
+export default function ProfileGrid({
+  showNewProfileModal,
+  setShowNewProfileModal,
+}: ProfileGridProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     loadProfiles();
@@ -74,6 +82,19 @@ export default function ProfileGrid() {
     }
   }
 
+  async function handleAvatarRemove(profile: Profile) {
+    try {
+      await invoke("remove_avatar", { profileId: profile.id });
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, avatar: undefined } : p
+        )
+      );
+    } catch (error) {
+      console.error("Failed to remove avatar:", error);
+    }
+  }
+
   async function handleRename(profile: Profile, newName: string) {
     try {
       await invoke("rename_profile", {
@@ -102,7 +123,7 @@ export default function ProfileGrid() {
 
     // Append to state; no avatar conversion needed (fresh profile has none).
     setProfiles((prev) => [...prev, newProfile]);
-    setShowModal(false);
+    setShowNewProfileModal(false);
 
     if (launchAfter) {
       // The new profile has no custom display_name yet, so profile.name
@@ -119,15 +140,30 @@ export default function ProfileGrid() {
     );
   }
 
+  if (profiles.length === 0) {
+    return (
+      <>
+        <EmptyState onCreateClick={() => setShowNewProfileModal(true)} />
+        {showNewProfileModal && (
+          <NewProfileModal
+            onClose={() => setShowNewProfileModal(false)}
+            onCreate={handleCreate}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
-      <section className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-10 md:grid-cols-3">
+      <section className="mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-fit px-6 pb-12 justify-items-center">
         {profiles.map((profile) => (
           <ProfileCard
             key={profile.id}
             profile={profile}
             onClick={handleProfileClick}
             onAvatarClick={handleAvatarClick}
+            onAvatarRemove={handleAvatarRemove}
             onRename={handleRename}
           />
         ))}
@@ -135,36 +171,43 @@ export default function ProfileGrid() {
         {/* ── New Profile Card ─────────────────────────────────────────────── */}
         <button
           id="new-profile-card"
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowNewProfileModal(true)}
           className="
             group
-            flex min-h-[160px] cursor-pointer flex-col items-center justify-center
+            w-[160px]
+            h-[160px]
+            cursor-pointer
+            flex flex-col items-center justify-center
             rounded-3xl
-            border-2 border-dashed border-border
-            bg-card/30
-            p-8
-            transition-all duration-300
-            hover:border-violet-500/50
-            hover:bg-accent/40
-            hover:shadow-2xl hover:shadow-violet-500/10
+            border border-dashed border-border
+            bg-card/40
+            p-5
+            transition-all duration-200
+            ease-out
+            shadow-[0_4px_15px_-4px_rgba(0,0,0,0.05)]
+            dark:shadow-none
+            hover:border-primary/40
+            hover:bg-card/85
+            hover:shadow-[0_8px_25px_-6px_rgba(247,111,83,0.1)]
+            dark:hover:shadow-[0_8px_30px_-8px_rgba(247,111,83,0.2)]
           "
         >
           <div
             className="
               mb-4 flex h-14 w-14 items-center justify-center
-              rounded-full border-2 border-dashed border-border
+              rounded-full border border-dashed border-border
               text-muted-foreground
-              transition-colors duration-300
-              group-hover:border-violet-500/60
-              group-hover:text-violet-400
+              transition-colors duration-200
+              group-hover:border-foreground/40
+              group-hover:text-foreground
             "
           >
-            <Plus size={24} />
+            <Plus size={22} />
           </div>
           <span
             className="
               text-sm font-medium text-muted-foreground
-              transition-colors duration-300
+              transition-colors duration-200
               group-hover:text-foreground
             "
           >
@@ -174,9 +217,9 @@ export default function ProfileGrid() {
       </section>
 
       {/* ── Modal ──────────────────────────────────────────────────────────── */}
-      {showModal && (
+      {showNewProfileModal && (
         <NewProfileModal
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowNewProfileModal(false)}
           onCreate={handleCreate}
         />
       )}

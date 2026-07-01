@@ -19,15 +19,6 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
     inputRef.current?.focus();
   }, []);
 
-  // Close on Escape.
-  React.useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && !loading) onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, loading]);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -59,7 +50,7 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
     /* ── Backdrop ─────────────────────────────────────────────────────────── */
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/45 backdrop-blur-md"
         onClick={() => !loading && onClose()}
         aria-hidden="true"
       />
@@ -72,20 +63,22 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
         className="
           relative z-10
           w-full max-w-md
-          rounded-2xl
+          rounded-3xl
           border border-border
           bg-card
           p-6
-          shadow-2xl dark:shadow-black/60
-          animate-in fade-in slide-in-from-bottom-4
+          shadow-[0_12px_40px_-6px_rgba(0,0,0,0.15)]
+          dark:shadow-[0_15px_50px_-8px_rgba(0,0,0,0.6)]
+          animate-in fade-in slide-in-from-bottom-3
           duration-200
+          ease-out
         "
       >
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-5 flex items-center justify-between">
           <h2
             id="new-profile-title"
-            className="text-xl font-semibold text-foreground"
+            className="text-lg font-medium tracking-tight text-foreground"
           >
             Create New Profile
           </h2>
@@ -94,13 +87,13 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
             disabled={loading}
             aria-label="Close"
             className="
-              rounded-lg p-1.5
-              text-muted-foreground transition-colors
+              rounded-xl p-1.5
+              text-muted-foreground transition-colors duration-150
               hover:bg-accent hover:text-accent-foreground
               disabled:opacity-40
             "
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -122,55 +115,56 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
                 setName(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="e.g. Work, Personal, Dev Dev…"
+              placeholder="e.g. Work, Personal, Dev…"
               disabled={loading}
               maxLength={100}
               className="
-                rounded-lg
+                rounded-xl
                 border border-border bg-background
                 px-4 py-2.5
-                text-foreground placeholder:text-muted-foreground
+                text-sm text-foreground placeholder:text-muted-foreground/60
                 outline-none
                 transition-all
-                focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/20
+                duration-150
+                focus:border-primary/50 focus:ring-2 focus:ring-primary/15
                 disabled:opacity-50
               "
             />
             {error && (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-sm text-destructive font-medium">
                 {error}
               </p>
             )}
           </div>
 
           {/* Launch after creation */}
-          <label className="flex cursor-pointer select-none items-center gap-3">
+          <label className="flex cursor-pointer select-none items-center gap-2.5">
             <input
               id="launch-after"
               type="checkbox"
               checked={launchAfter}
               onChange={(e) => setLaunchAfter(e.target.checked)}
               disabled={loading}
-              className="h-4 w-4 accent-violet-500"
+              className="h-4 w-4 rounded border-border text-primary accent-primary focus:ring-primary/30"
             />
-            <span className="text-sm text-foreground/80">Launch after creation</span>
+            <span className="text-sm text-muted-foreground font-normal">Launch after creation</span>
           </label>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-1">
+          <div className="flex justify-end gap-2.5 pt-1">
             <button
               type="button"
               onClick={() => !loading && onClose()}
               disabled={loading}
               className="
-                rounded-lg
+                rounded-xl
                 border border-border
                 px-4 py-2
                 text-sm font-medium text-foreground/80
-                transition-colors
+                transition-colors duration-150
                 hover:bg-accent hover:text-accent-foreground
                 disabled:opacity-50
-              "
+               font-normal"
             >
               Cancel
             </button>
@@ -178,17 +172,17 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
               type="submit"
               disabled={loading || !name.trim()}
               className="
-                flex items-center gap-2
-                rounded-lg
-                bg-violet-600
+                flex items-center gap-1.5
+                rounded-xl
+                bg-primary
                 px-5 py-2
-                text-sm font-medium text-white
-                transition-colors
-                hover:bg-violet-500
+                text-sm font-medium text-primary-foreground
+                transition-colors duration-150
+                hover:bg-primary/90
                 disabled:cursor-not-allowed disabled:opacity-50
               "
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
+              {loading && <Loader2 size={13} className="animate-spin" />}
               {loading ? "Creating…" : "Create"}
             </button>
           </div>
