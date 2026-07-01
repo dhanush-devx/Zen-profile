@@ -113,7 +113,7 @@ export default function ProfileGrid() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-24 text-zinc-400">
+      <div className="flex justify-center py-24 text-muted-foreground">
         Loading profiles...
       </div>
     );
@@ -140,20 +140,20 @@ export default function ProfileGrid() {
             group
             flex min-h-[160px] cursor-pointer flex-col items-center justify-center
             rounded-3xl
-            border-2 border-dashed border-zinc-700
-            bg-zinc-900/30
+            border-2 border-dashed border-border
+            bg-card/30
             p-8
             transition-all duration-300
             hover:border-violet-500/50
-            hover:bg-zinc-800/40
+            hover:bg-accent/40
             hover:shadow-2xl hover:shadow-violet-500/10
           "
         >
           <div
             className="
               mb-4 flex h-14 w-14 items-center justify-center
-              rounded-full border-2 border-dashed border-zinc-600
-              text-zinc-500
+              rounded-full border-2 border-dashed border-border
+              text-muted-foreground
               transition-colors duration-300
               group-hover:border-violet-500/60
               group-hover:text-violet-400
@@ -163,9 +163,9 @@ export default function ProfileGrid() {
           </div>
           <span
             className="
-              text-sm font-medium text-zinc-500
+              text-sm font-medium text-muted-foreground
               transition-colors duration-300
-              group-hover:text-zinc-300
+              group-hover:text-foreground
             "
           >
             New Profile

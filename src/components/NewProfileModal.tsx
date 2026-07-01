@@ -73,10 +73,10 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
           relative z-10
           w-full max-w-md
           rounded-2xl
-          border border-zinc-700/80
-          bg-zinc-900
+          border border-border
+          bg-card
           p-6
-          shadow-2xl shadow-black/60
+          shadow-2xl dark:shadow-black/60
           animate-in fade-in slide-in-from-bottom-4
           duration-200
         "
@@ -85,7 +85,7 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
         <div className="mb-6 flex items-center justify-between">
           <h2
             id="new-profile-title"
-            className="text-xl font-semibold text-white"
+            className="text-xl font-semibold text-foreground"
           >
             Create New Profile
           </h2>
@@ -95,8 +95,8 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
             aria-label="Close"
             className="
               rounded-lg p-1.5
-              text-zinc-400 transition-colors
-              hover:bg-zinc-800 hover:text-white
+              text-muted-foreground transition-colors
+              hover:bg-accent hover:text-accent-foreground
               disabled:opacity-40
             "
           >
@@ -109,7 +109,7 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="new-profile-name"
-              className="text-sm font-medium text-zinc-300"
+              className="text-sm font-medium text-foreground/90"
             >
               Profile Name
             </label>
@@ -122,14 +122,14 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
                 setName(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="e.g. Work, Personal, Dev…"
+              placeholder="e.g. Work, Personal, Dev Dev…"
               disabled={loading}
               maxLength={100}
               className="
                 rounded-lg
-                border border-zinc-700 bg-zinc-800
+                border border-border bg-background
                 px-4 py-2.5
-                text-white placeholder-zinc-500
+                text-foreground placeholder:text-muted-foreground
                 outline-none
                 transition-all
                 focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/20
@@ -137,7 +137,7 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
               "
             />
             {error && (
-              <p role="alert" className="text-sm text-red-400">
+              <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             )}
@@ -153,7 +153,7 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
               disabled={loading}
               className="h-4 w-4 accent-violet-500"
             />
-            <span className="text-sm text-zinc-300">Launch after creation</span>
+            <span className="text-sm text-foreground/80">Launch after creation</span>
           </label>
 
           {/* Actions */}
@@ -164,11 +164,11 @@ export default function NewProfileModal({ onClose, onCreate }: Props) {
               disabled={loading}
               className="
                 rounded-lg
-                border border-zinc-700
+                border border-border
                 px-4 py-2
-                text-sm font-medium text-zinc-300
+                text-sm font-medium text-foreground/80
                 transition-colors
-                hover:border-zinc-500 hover:text-white
+                hover:bg-accent hover:text-accent-foreground
                 disabled:opacity-50
               "
             >

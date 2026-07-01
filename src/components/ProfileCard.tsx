@@ -73,8 +73,8 @@ export default function ProfileCard({
         cursor-pointer
         rounded-3xl
         border
-        border-zinc-800
-        bg-zinc-900/70
+        border-border
+        bg-card/75
         p-8
         backdrop-blur
         transition-all
@@ -144,11 +144,11 @@ export default function ProfileCard({
             onClick={(e) => e.stopPropagation()}
             className="
               w-full max-w-[180px]
-              bg-zinc-800
+              bg-muted
               border border-violet-500/60
               rounded-lg
               px-3 py-1
-              text-center text-lg font-semibold text-white
+              text-center text-lg font-semibold text-foreground
               outline-none
               focus:ring-2 focus:ring-violet-500/40
               transition-all
@@ -160,7 +160,7 @@ export default function ProfileCard({
             onMouseEnter={() => setNameHovered(true)}
             onMouseLeave={() => setNameHovered(false)}
           >
-            <h2 className="text-xl font-semibold text-center text-white">
+            <h2 className="text-xl font-semibold text-center text-foreground">
               {profile.name}
             </h2>
             {/* Pencil icon — only visible on hover, clicking starts edit */}
@@ -169,7 +169,7 @@ export default function ProfileCard({
               title="Rename profile"
               className="
                 transition-opacity duration-150
-                text-zinc-500 hover:text-violet-400
+                text-muted-foreground hover:text-violet-500
                 focus:outline-none
               "
               style={{ opacity: nameHovered ? 1 : 0 }}
