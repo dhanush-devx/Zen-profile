@@ -6,8 +6,9 @@ mod services;
 fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     use tauri::menu::{AboutMetadata, Menu, MenuItemBuilder, SubmenuBuilder};
     use tauri_plugin_opener::OpenerExt;
-    use tauri::Manager;
     use tauri::Emitter;
+    #[cfg(debug_assertions)]
+    use tauri::Manager;
 
     let handle = app.handle();
 
@@ -46,6 +47,7 @@ fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Erro
         .build()?;
 
     // 4. View Menu
+    #[allow(unused_mut)]
     let mut view_menu_builder = SubmenuBuilder::new(handle, "View")
         .fullscreen();
 
