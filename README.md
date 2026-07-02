@@ -2,7 +2,7 @@
 
 # Zen Profile
 
-<img src="README-assets/logo.png" width="96">
+<img src="public/Zen-Profile-bg.png" width="96">
 
 ### A modern native profile manager for Zen Browser on macOS.
 
@@ -42,7 +42,7 @@ Create, launch, rename and customize Zen Browser profiles from one beautiful nat
 ## Create Profile
 
 <p align="center">
-<img src="README-assets/create-profile.png" width="700">
+<img src="README-assets/create-profile.png" width="900">
 </p>
 
 ---
