@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS
+          - platform: macos-latest
+            args: "--bundles dmg"
+
+          # Windows
+          - platform: windows-latest
+            args: "--bundles msi"
+
+          # Linux
+          - platform: ubuntu-latest
+            args: "--bundles appimage"
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev \
+            libssl-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Build and create GitHub Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Zen Profile ${{ github.ref_name }}"
+
+          releaseBody: |
+            ## 🚀 Zen Profile
+
+            Thank you for using **Zen Profile**!
+
+            ### Downloads
+
+            - 🍎 macOS (.dmg)
+            - 🪟 Windows (.msi)
+            - 🐧 Linux (.AppImage)
+
+            The full list of changes is included in the automatically generated release notes below.
+
+          generateReleaseNotes: true
+
+          releaseDraft: true
+          prerelease: false
+
+          args: ${{ matrix.args }}
