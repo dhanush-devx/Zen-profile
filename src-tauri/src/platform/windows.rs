@@ -14,14 +14,23 @@ pub fn app_data_directory() -> PathBuf {
 }
 
 pub fn find_zen_browser() -> Result<PathBuf, String> {
-    let program_files = std::env::var("ProgramFiles").ok();
-    let program_files_x86 = std::env::var("ProgramFiles(x86)").ok();
-    let local_app_data = std::env::var("LOCALAPPDATA").ok();
-
-    let candidates = [program_files, program_files_x86, local_app_data]
-        .into_iter()
-        .flatten()
+    let program_files = std::env::var("ProgramFiles")
+        .ok()
         .map(|base| PathBuf::from(base).join("Zen Browser").join("zen.exe"));
+    let program_files_x86 = std::env::var("ProgramFiles(x86)")
+        .ok()
+        .map(|base| PathBuf::from(base).join("Zen Browser").join("zen.exe"));
+    // Per-user installs (no admin rights) land under %LOCALAPPDATA%\Programs.
+    let local_app_data_programs = std::env::var("LOCALAPPDATA").ok().map(|base| {
+        PathBuf::from(base)
+            .join("Programs")
+            .join("Zen Browser")
+            .join("zen.exe")
+    });
+
+    let candidates = [program_files, program_files_x86, local_app_data_programs]
+        .into_iter()
+        .flatten();
 
     for candidate in candidates {
         if candidate.exists() {
@@ -29,7 +38,7 @@ pub fn find_zen_browser() -> Result<PathBuf, String> {
         }
     }
 
-    Err("Zen Browser was not found in Program Files. Please install Zen Browser or set a custom path in Settings.".to_string())
+    Err("Zen Browser was not found in Program Files or %LOCALAPPDATA%\\Programs. Please install Zen Browser or set a custom path in Settings.".to_string())
 }
 
 pub fn launch_profile(executable: &Path, profile_id: &str) -> Result<(), String> {
