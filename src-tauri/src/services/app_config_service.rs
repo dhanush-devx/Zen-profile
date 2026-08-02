@@ -1,4 +1,4 @@
-use dirs::home_dir;
+use crate::platform;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -44,22 +44,14 @@ pub struct VersionInfo {
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-fn zen_profile_dir() -> PathBuf {
-    home_dir()
-        .expect("no home directory")
-        .join("Library")
-        .join("Application Support")
-        .join("zen-profile")
-}
-
 fn app_config_path() -> PathBuf {
-    zen_profile_dir().join("app_config.json")
+    platform::app_data_directory().join("app_config.json")
 }
 
 /// Returns the absolute path to the zen-profile settings directory.
 /// Used by the open_settings_folder command.
 pub fn get_settings_dir() -> PathBuf {
-    zen_profile_dir()
+    platform::app_data_directory()
 }
 
 // ── Persistence ───────────────────────────────────────────────────────────────
@@ -94,10 +86,8 @@ pub fn get_version_info(app: &tauri::AppHandle) -> VersionInfo {
     let pkg = app.package_info();
 
     // Substitute the real home directory with ~ for a cleaner display.
-    let home = home_dir()
-        .map(|h| h.to_string_lossy().to_string())
-        .unwrap_or_default();
-    let full = zen_profile_dir().to_string_lossy().to_string();
+    let home = platform::home_directory().to_string_lossy().to_string();
+    let full = platform::app_data_directory().to_string_lossy().to_string();
     let settings_dir = if full.starts_with(&home) {
         format!("~{}", &full[home.len()..])
     } else {

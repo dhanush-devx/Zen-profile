@@ -1,30 +1,10 @@
 use crate::models::profile::Profile;
+use crate::platform;
 use crate::services::avatar_service;
-use dirs::home_dir;
 use ini::Ini;
-use std::path::PathBuf;
-use std::process::Command;
-
-fn profiles_ini_path() -> PathBuf {
-    home_dir()
-        .unwrap()
-        .join("Library")
-        .join("Application Support")
-        .join("zen")
-        .join("profiles.ini")
-}
-
-/// Base directory for Zen's application data.
-fn profiles_base_dir() -> PathBuf {
-    home_dir()
-        .unwrap()
-        .join("Library")
-        .join("Application Support")
-        .join("zen")
-}
 
 pub fn get_profiles() -> Vec<Profile> {
-    let path = profiles_ini_path();
+    let path = platform::profiles_ini_path();
 
     let ini = Ini::load_from_file(&path).unwrap();
 
@@ -72,14 +52,8 @@ pub fn get_profiles() -> Vec<Profile> {
     profiles
 }
 
-pub fn launch_profile(profile_id: String) {
-    println!("Launching profile: {}", profile_id);
-
-    let status = Command::new("open")
-        .args(["-na", "/Applications/Zen.app", "--args", "-P", &profile_id])
-        .status();
-
-    println!("{:?}", status);
+pub fn launch_profile(profile_id: String) -> Result<(), String> {
+    platform::launch_profile(&profile_id)
 }
 
 /// Creates a new Zen Browser profile by:
@@ -109,7 +83,7 @@ pub fn create_profile(name: &str) -> Result<Profile, String> {
     }
 
     // ── Duplicate check ───────────────────────────────────────────────────────
-    let ini_path = profiles_ini_path();
+    let ini_path = platform::profiles_ini_path();
     let mut ini = Ini::load_from_file(&ini_path)
         .map_err(|e| format!("Failed to read profiles.ini: {}", e))?;
 
@@ -132,7 +106,7 @@ pub fn create_profile(name: &str) -> Result<Profile, String> {
     let profile_id = generate_profile_id();
     let dir_name = format!("{}.{}", profile_id, trimmed);
     let relative_path = format!("Profiles/{}", dir_name);
-    let profile_dir = profiles_base_dir().join("Profiles").join(&dir_name);
+    let profile_dir = platform::profiles_directory().join(&dir_name);
 
     if profile_dir.exists() {
         // Astronomically unlikely with an 8-char random ID, but guard anyway.

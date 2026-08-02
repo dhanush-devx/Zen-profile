@@ -1,5 +1,5 @@
+use crate::platform;
 use base64::Engine as _;
-use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -32,20 +32,12 @@ pub struct AppSettings {
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-fn zen_profile_dir() -> PathBuf {
-    home_dir()
-        .expect("no home directory")
-        .join("Library")
-        .join("Application Support")
-        .join("zen-profile")
-}
-
 fn avatars_dir() -> PathBuf {
-    zen_profile_dir().join("avatars")
+    platform::app_data_directory().join("avatars")
 }
 
 fn settings_path() -> PathBuf {
-    zen_profile_dir().join("settings.json")
+    platform::app_data_directory().join("settings.json")
 }
 
 // ── Settings persistence ──────────────────────────────────────────────────────

@@ -59,18 +59,17 @@ pub fn get_version_info(app: tauri::AppHandle) -> VersionInfo {
 
 // ── Storage ───────────────────────────────────────────────────────────────────
 
-/// Opens the zen-profile settings directory in macOS Finder.
+/// Opens the zen-profile settings directory in the OS file manager
+/// (Finder / Explorer / the default file manager on Linux).
 /// Creates the directory first if it does not yet exist.
 #[tauri::command]
-pub fn open_settings_folder() -> Result<(), String> {
-    use std::process::Command;
+pub fn open_settings_folder(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
 
     let dir = app_config_service::get_settings_dir();
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
 
-    Command::new("open")
-        .arg(&dir)
-        .status()
-        .map(|_| ())
+    app.opener()
+        .open_path(dir.to_string_lossy().to_string(), None::<&str>)
         .map_err(|e| e.to_string())
 }

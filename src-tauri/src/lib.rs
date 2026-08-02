@@ -1,14 +1,15 @@
 mod commands;
 mod models;
+mod platform;
 mod services;
 
 #[cfg(target_os = "macos")]
 fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     use tauri::menu::{AboutMetadata, Menu, MenuItemBuilder, SubmenuBuilder};
-    use tauri_plugin_opener::OpenerExt;
     use tauri::Emitter;
     #[cfg(debug_assertions)]
     use tauri::Manager;
+    use tauri_plugin_opener::OpenerExt;
 
     let handle = app.handle();
 
@@ -19,7 +20,11 @@ fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Erro
             version: Some(app.package_info().version.to_string()),
             ..Default::default()
         }))
-        .item(&MenuItemBuilder::with_id("settings", "Settings…").accelerator("CmdOrCtrl+,").build(handle)?)
+        .item(
+            &MenuItemBuilder::with_id("settings", "Settings…")
+                .accelerator("CmdOrCtrl+,")
+                .build(handle)?,
+        )
         .separator()
         .hide()
         .hide_others()
@@ -30,7 +35,11 @@ fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 
     // 2. File Menu
     let file_menu = SubmenuBuilder::new(handle, "File")
-        .item(&MenuItemBuilder::with_id("new_profile", "New Profile").accelerator("CmdOrCtrl+N").build(handle)?)
+        .item(
+            &MenuItemBuilder::with_id("new_profile", "New Profile")
+                .accelerator("CmdOrCtrl+N")
+                .build(handle)?,
+        )
         .separator()
         .close_window()
         .build()?;
@@ -48,13 +57,14 @@ fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Erro
 
     // 4. View Menu
     #[allow(unused_mut)]
-    let mut view_menu_builder = SubmenuBuilder::new(handle, "View")
-        .fullscreen();
+    let mut view_menu_builder = SubmenuBuilder::new(handle, "View").fullscreen();
 
     #[cfg(debug_assertions)]
     {
         view_menu_builder = view_menu_builder.separator().item(
-            &MenuItemBuilder::with_id("dev_tools", "Developer Tools").accelerator("CmdOrCtrl+Alt+I").build(handle)?
+            &MenuItemBuilder::with_id("dev_tools", "Developer Tools")
+                .accelerator("CmdOrCtrl+Alt+I")
+                .build(handle)?,
         );
     }
 
@@ -85,28 +95,31 @@ fn setup_macos_menu(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Erro
     app.set_menu(menu)?;
 
     // Menu event listener
-    app.on_menu_event(move |app_handle, event| {
-        match event.id().0.as_str() {
-            "settings" => {
-                let _ = app_handle.emit("menu-settings", ());
-            }
-            "new_profile" => {
-                let _ = app_handle.emit("menu-new-profile", ());
-            }
-            "github" => {
-                let _ = app_handle.opener().open_url("https://github.com/dhanush-devx/zen-profile", None::<&str>);
-            }
-            "report_issue" => {
-                let _ = app_handle.opener().open_url("https://github.com/dhanush-devx/zen-profile/issues/new", None::<&str>);
-            }
-            #[cfg(debug_assertions)]
-            "dev_tools" => {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    let _ = window.open_devtools();
-                }
-            }
-            _ => {}
+    app.on_menu_event(move |app_handle, event| match event.id().0.as_str() {
+        "settings" => {
+            let _ = app_handle.emit("menu-settings", ());
         }
+        "new_profile" => {
+            let _ = app_handle.emit("menu-new-profile", ());
+        }
+        "github" => {
+            let _ = app_handle
+                .opener()
+                .open_url("https://github.com/dhanush-devx/zen-profile", None::<&str>);
+        }
+        "report_issue" => {
+            let _ = app_handle.opener().open_url(
+                "https://github.com/dhanush-devx/zen-profile/issues/new",
+                None::<&str>,
+            );
+        }
+        #[cfg(debug_assertions)]
+        "dev_tools" => {
+            if let Some(window) = app_handle.get_webview_window("main") {
+                let _ = window.open_devtools();
+            }
+        }
+        _ => {}
     });
 
     Ok(())

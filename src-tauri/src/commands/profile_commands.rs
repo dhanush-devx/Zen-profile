@@ -7,8 +7,8 @@ pub fn get_profiles() -> Vec<Profile> {
 }
 
 #[tauri::command]
-pub fn launch_profile(profile_id: String) {
-    profile_service::launch_profile(profile_id);
+pub fn launch_profile(profile_id: String) -> Result<(), String> {
+    profile_service::launch_profile(profile_id)
 }
 
 /// Creates a new Zen Browser profile with the given name.
