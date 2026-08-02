@@ -1,6 +1,6 @@
 [package]
 name = "zen-profile"
-version = "0.1.0"
+version = "0.2.0"
 description = "ZenProfile – A native companion for Zen Browser"
 authors = ["you"]
 edition = "2021"
